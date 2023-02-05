@@ -3,8 +3,11 @@ const bodyParser = require('body-parser')
 const { sequelize } = require('./model')
 const { getProfile } = require('./middleware/getProfile')
 const { errorHandler } = require('./middleware/errorHandler')
-const { NotFoundException } = require('./utils/errors')
+const { NotFoundException, BadRequestException } = require('./utils/errors')
 const { getAllNonTerminatedContracts, getContractById } = require('./repositories/contracts')
+const { findProfile, updateProfileBalance, BALANCE_OPERATION } = require('./repositories/profile')
+const { getTotalJobsToPay } = require('./repositories/jobs')
+
 
 const app = express()
 app.use(bodyParser.json())
@@ -35,6 +38,31 @@ app.get('/contracts', getProfile, async (req, res, next) => {
 		if (!contracts) throw new NotFoundException('No contract found')
 
 		res.json(contracts)
+	} catch (error) {
+		next(error)
+	}
+})
+
+app.post('/balances/deposit/:userId', async (req, res, next) => {
+	try {
+		const { userId } = req.params
+		const { amount } = req.body
+
+		if(!userId) throw new BadRequestException('User id is missing.')
+	
+		const getClient = await findProfile(userId)
+	
+		if(!getClient) throw new NotFoundException('Client not found.')
+	
+		const totalJobsToPay = await getTotalJobsToPay(userId) ?? 0
+	
+		const maxDeposit = totalJobsToPay * 0.25
+	
+		if(amount > maxDeposit) throw new BadRequestException('The maximum deposit limit has been attained.')
+	
+		await updateProfileBalance(userId, { value: amount, operation: BALANCE_OPERATION.C })
+	
+		res.json(totalJobsToPay)
 	} catch (error) {
 		next(error)
 	}
