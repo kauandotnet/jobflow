@@ -1,4 +1,4 @@
-const errorHandler = (error, _req, res) => {
+const errorHandler = (error, _req, res, _next) => {
 	const isError = error instanceof Error
 	const errorStatus = error.statusCode ?? 500
 	const errorMessage = errorStatus < 500 ? (isError ? error.message : error) : 'Internal Server Error'

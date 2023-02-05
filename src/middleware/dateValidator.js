@@ -1,4 +1,4 @@
-const { BadRequestException } = require('../error')
+const { BadRequestException } = require('../utils/errors')
 
 const dateValidator = async (req, _res, next) => {
 	try {
@@ -11,7 +11,6 @@ const dateValidator = async (req, _res, next) => {
 	} catch (error) {
 		next(error)
 	}
-   
 }
 
 module.exports = { dateValidator }
