@@ -1,7 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const {sequelize} = require('./model')
-const {getProfile} = require('./middleware/getProfile')
+const {getProfile} = require('./middleware/getProfile');
+const { errorHandler } = require('./middleware/errorHandler');
+const { NotFoundException } = require('./utils/errors');
 const app = express();
 app.use(bodyParser.json());
 app.set('sequelize', sequelize)
@@ -18,4 +20,11 @@ app.get('/contracts/:id',getProfile ,async (req, res) =>{
     if(!contract) return res.status(404).end()
     res.json(contract)
 })
+
+app.use(() => { 
+    throw new NotFoundException()
+})
+
+app.use(errorHandler)
+
 module.exports = app;
