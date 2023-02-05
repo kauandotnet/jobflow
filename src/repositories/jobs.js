@@ -47,7 +47,7 @@ const getJob = (id, profileId) => Job.findOne({
 	}
 })
 
-const setJobToPaid = (id) => Job.update({ paid: true, paymentDate: new Date() }, { where: { id } })
+const setJobToPaid = (id, transaction) => Job.update({ paid: true, paymentDate: new Date() },  {  where: { id }, transaction })
 
 const getBestProfession = (start, end) => Job.findOne({
 	subQuery: false,

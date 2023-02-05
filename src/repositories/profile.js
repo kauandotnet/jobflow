@@ -7,14 +7,20 @@ const BALANCE_OPERATION = Object.freeze({
 
 const allowedBalanceOperations = Object.values(BALANCE_OPERATION)
 
-const findProfile = (id) => Profile.findOne({ where: { id } }) 
+const findProfile = (id, transaction = null) => {
+	const objCondition = { where: { id } }
+	
+	if(transaction) Object.assign(objCondition, {transaction, lock: transaction.LOCK.UPDATE})
+	
+	return Profile.findOne(objCondition) 
+}
 
-const updateProfileBalance = (id, {value, operation}) => {
+const updateProfileBalance = (id, {value, operation}, transaction) => {
 	if(!allowedBalanceOperations.includes(operation)) throw new Error('Operation not allowed.')
 
 	const balance = operation === BALANCE_OPERATION.C ? Number(value) : - Number(value)
 
-	return Profile.increment({ balance }, {where: { id }})
+	return Profile.increment({ balance }, { where: { id }, transaction })
 }
 
 module.exports = { findProfile, BALANCE_OPERATION, updateProfileBalance }

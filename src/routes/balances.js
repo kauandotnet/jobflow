@@ -3,6 +3,6 @@ const { userDeposit } = require('../controllers/balances')
 
 const balanceRoutes = express.Router()
 
-balanceRoutes.get('/deposit/:userId', userDeposit)
+balanceRoutes.post('/deposit/:userId', userDeposit)
 
 module.exports = balanceRoutes

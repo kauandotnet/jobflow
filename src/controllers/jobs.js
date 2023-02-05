@@ -1,6 +1,8 @@
 const { getUnpaidJobs, getJob, setJobToPaid } = require('../repositories/jobs')
 const { NotFoundException, BadRequestException } = require('../utils/errors')
-const {  updateProfileBalance, BALANCE_OPERATION } = require('../repositories/profile')
+const {  updateProfileBalance, BALANCE_OPERATION, findProfile } = require('../repositories/profile')
+const { sequelize } = require('../model')
+const { Transaction } = require('sequelize')
 
 
 const listUnpaidJobs = async (req, res, next) => {
@@ -18,6 +20,10 @@ const listUnpaidJobs = async (req, res, next) => {
 }
 
 const payJob = async (req, res, next) => {
+	const dbTransaction = await sequelize.transaction({
+		isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED
+	})
+
 	try {
 		const { id: profileId } = req.profile
 		const { job_id: jobId } = req.params
@@ -30,16 +36,22 @@ const payJob = async (req, res, next) => {
 
 		const { price, Contract: { Client, Contractor }} = job
 
+		const [getClient, getContractor] = await Promise.all([ findProfile(Client.id, dbTransaction), findProfile(Contractor.id, dbTransaction) ])
+
 		if(price > Client.balance) throw new BadRequestException('You cant pay for this job')
 
 		await Promise.all([
-			updateProfileBalance(Client.id, { value: price, operation: BALANCE_OPERATION.D }),
-			updateProfileBalance(Contractor.id, { value: price, operation: BALANCE_OPERATION.C }),
-			setJobToPaid(jobId)
+			updateProfileBalance(getClient.id, { value: price, operation: BALANCE_OPERATION.D }, dbTransaction),
+			updateProfileBalance(getContractor.id, { value: price, operation: BALANCE_OPERATION.C }, dbTransaction),
+			setJobToPaid(jobId, dbTransaction)
 		])
 
+		await dbTransaction.commit()
+		
 		res.json(job)
 	} catch (error) {
+		await dbTransaction.rollback()
+
 		next(error)
 	}
 }
