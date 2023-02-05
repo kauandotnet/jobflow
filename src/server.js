@@ -1,6 +1,23 @@
 const app = require('./app')
+const cluster = require('cluster')
+const numCPUs = require('os').cpus().length
 
-init()
+const onWorkerError = (code, signal) => console.error(code, signal)
+if (cluster.isMaster && numCPUs > 1) {
+	for (let i = 0; i < numCPUs; i++) {
+		const worker = cluster.fork()
+		worker.on('error', onWorkerError)
+	}
+
+	cluster.on('exit', () => {
+		const newWorker = cluster.fork()
+		newWorker.on('error', onWorkerError)
+		console.error('new worker: ', newWorker.process.pid)
+	})
+	cluster.on('exit', console.error)
+} else {
+	init()
+}
 
 async function init() {
 	try {
@@ -12,3 +29,4 @@ async function init() {
 		process.exit(1)
 	}
 }
+
