@@ -96,3 +96,14 @@ It would be great for example if you'd write some unit test / simple frontend de
 When you have finished the assignment, zip your repo (make sure to include .git folder) and send us the zip.
 
 Thank you and good luck! 🙏
+
+## If I had more time, I would implement:
+
+- Unit Tests: Writing unit tests to test individual components of the codebase.
+- Integration Tests: Writing integration tests to test the interaction between different components of the codebase.
+- API Documentation: Creating API documentation, such as Swagger, to provide a clear and concise overview of the APIs.
+- Domain-Driven Design (DDD): Applying Domain-Driven Design principles to the codebase to ensure that it is organized and easy to understand.
+- Design Patterns
+- API Requests Collection: Adding organized collections for API requests in tools such as Insomnia and Postman.
+- Specific Validators: Adding more specific validators to the codebase to avoid falling into the global error handler.
+- Logging: Adding a logging system, such as Winston or Pino, to the codebase to better monitor and debug the application.
