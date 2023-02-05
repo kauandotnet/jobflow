@@ -1,4 +1,4 @@
-const { Op } = require('sequelize')
+const { Op, fn, col, literal } = require('sequelize')
 const { Job, Contract, Profile } = require('../model')
 
 const getTotalJobsToPay = (ClientId) => Job.sum('price', {
@@ -45,9 +45,66 @@ const getJob = (id, profileId) => Job.findOne({
 		},
 		]
 	}
-}
-)
+})
 
 const setJobToPaid = (id) => Job.update({ paid: true, paymentDate: new Date() }, { where: { id } })
 
-module.exports = { getTotalJobsToPay, getUnpaidJobs, getJob, setJobToPaid }
+const getBestProfession = (start, end) => Job.findOne({
+	subQuery: false,
+	attributes: [
+		'Contract->Contractor.profession',
+		[fn('MAX', col('price')), 'total']
+	],
+	include: [{
+		model: Contract,
+		required: true,
+		attributes: [],
+		include: [{
+			model: Profile,
+			required: true,
+			as: 'Contractor',
+			attributes: []
+		}]
+	}],
+	where: {
+		paid: true,
+		paymentDate: {
+			[Op.between]: [start, end]
+		}
+	},
+	group: 'profession',
+	raw: true,
+	order: [[fn('MAX', col('price')), 'DESC']]
+})
+
+const getBestClients = (start, end, limit = 1) => Job.findAll({
+	subQuery: false,
+	attributes: [
+		'Contract.Client.id',
+		[literal('firstName || \' \' || lastName'), 'fullName'],
+		[fn('SUM', col('price')), 'paid']
+	],
+	include: [{
+		model: Contract,
+		required: true,
+		attributes: [],
+		include: [{
+			model: Profile,
+			required: true,
+			as: 'Client',
+			attributes: []
+		}]
+	}],
+	where: {
+		paid: true,
+		paymentDate: {
+			[Op.between]: [start, end]
+		}
+	},
+	group: 'Contract.Client.id',
+	raw: true,
+	order: [[fn('SUM', col('price')), 'DESC']],
+	limit
+})
+
+module.exports = { getTotalJobsToPay, getUnpaidJobs, getJob, setJobToPaid, getBestProfession, getBestClients }

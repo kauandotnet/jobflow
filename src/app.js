@@ -3,10 +3,11 @@ const bodyParser = require('body-parser')
 const { sequelize } = require('./model')
 const { getProfile } = require('./middleware/getProfile')
 const { errorHandler } = require('./middleware/errorHandler')
+const { dateValidator } = require('./middleware/dateValidator')
 const { NotFoundException, BadRequestException } = require('./utils/errors')
 const { getAllNonTerminatedContracts, getContractById } = require('./repositories/contracts')
 const { findProfile, updateProfileBalance, BALANCE_OPERATION } = require('./repositories/profile')
-const { getTotalJobsToPay, getUnpaidJobs, setJobToPaid, getJob } = require('./repositories/jobs')
+const { getTotalJobsToPay, getUnpaidJobs, setJobToPaid, getJob, getBestProfession, getBestClients } = require('./repositories/jobs')
 
 const app = express()
 app.use(bodyParser.json())
@@ -44,7 +45,6 @@ app.get('/contracts', getProfile, async (req, res, next) => {
 
 app.get('/jobs/unpaid', getProfile, async (req,res, next) => {
 	try {
-    
 		const { id: profileId } = req.profile
 
 		const unpaidJobs = await getUnpaidJobs(profileId)
@@ -109,6 +109,34 @@ app.post('/balances/deposit/:userId', async (req, res, next) => {
 		next(error)
 	}
 })
+
+
+app.get('/admin/best-profession',dateValidator, async (req,res, next) => {
+	try {
+		const { start, end } = req.query
+
+		const bestProfession = await getBestProfession(start, end)
+  
+		res.json(bestProfession)
+	} catch (error) {
+		next(error)
+	}
+})
+
+app.get('/admin/best-clients',dateValidator, async (req,res, next) => {
+	try {
+		const { start, end, limit } = req.query
+  
+		const parseLimit = Number.isInteger(limit) ? limit : 1
+  
+		const bestClients = await getBestClients(start, end, parseLimit)
+  
+		res.json(bestClients)
+	} catch (error) {
+		next(error)
+	}
+})
+  
 
 app.use(() => {
 	throw new NotFoundException()
