@@ -6,8 +6,6 @@ const findBestProfession = async (req, res, next) => {
 
 		const bestProfession = await getBestProfession(start, end)
 
-		console.log('entrei', bestProfession)
-  
 		res.json(bestProfession)
 	} catch (error) {
 		next(error)
