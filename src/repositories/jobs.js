@@ -27,7 +27,9 @@ const getUnpaidJobs = (profileId) => Job.findAll({
 
 const getJob = (id, profileId) => Job.findOne({ 
 	where: { id, paid: {
-		[Op.is]: null}, paymentDate: {[Op.is]: null}  }, include: {
+		[Op.is]: null}, 
+		paymentDate: {[Op.is]: null}  }, 
+		include: {
 		model: Contract,
 		required: true,
 		where: {
